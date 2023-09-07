@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー</title>
+    <style>
+        td {
+            border: 1px solid #000;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+        }
+        th {
+            border: 1px solid #000;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+        }
+        .red {
+            background-color: rgb(248, 66, 66);
+        }
+        .pink {
+            background-color: rgb(255, 172, 226);
+        }
+        .lightblue {
+            background-color: rgb(138, 228, 232);
+        }
+        .purple {
+            background-color: rgb(204, 93, 255);
+        }
+        .today {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="thisMonthDiv"></div>
+    <table id="thisMonth"></table>
+    <div id="nextMonthDiv"></div>
+    <table id="nextMonth"></table>
+    <div id="nextNextMonthDiv"></div>
+    <table id="nextNextMonth"></table>
+
+    <script>
+        const thisMonthTable = document.getElementById("thisMonth");
+        const nextMonthTable = document.getElementById("nextMonth");
+        const nextNextMonthTable = document.getElementById("nextNextMonth");
+        const thisMonthDiv = document.getElementById("thisMonthDiv");
+        const nextMonthDiv = document.getElementById("nextMonthDiv");
+        const nextNextMonthDiv = document.getElementById("nextNextMonthDiv");
+
+        // 今月のカレンダーを作成
+        const thisMonth = new Date();
+        thisMonthDiv.textContent = `${thisMonth.getMonth() + 1}月`;
+        createCalendar(thisMonthTable, thisMonth);
+
+        // 翌月のカレンダーを作成
+        const nextMonth = new Date();
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        nextMonthDiv.textContent = `${nextMonth.getMonth() + 1}月`;
+        createCalendar(nextMonthTable, nextMonth);
+
+        // 翌々月のカレンダーを作成
+        const nextNextMonth = new Date();
+        nextNextMonth.setMonth(nextNextMonth.getMonth() + 2);
+        nextNextMonthDiv.textContent = `${nextNextMonth.getMonth() + 1}月`;
+        createCalendar(nextNextMonthTable, nextNextMonth);
+
+        function createCalendar(table, date) {
+            // カレンダーのヘッダーを作成
+            const days = ["月", "火", "水", "木", "金", "土", "日"];
+            const header = table.createTHead();
+            const row = header.insertRow();
+            for (const day of days) {
+                const cell = row.insertCell();
+                cell.textContent = day;
+            }
+
+            // カレンダーの日付を作成
+            const body = table.createTBody();
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+            const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const today = new Date();
+            const firstDayOfWeek = (firstDay.getDay() + 6) % 7;
+            let dayCount = 1;
+            let wednesdayCount = 0;
+            let saturdayCount = 0;
+
+            for (let i = 0; i < 6; i++) {
+                const row = body.insertRow();
+                for (let j = 0; j < 7; j++) {
+                    const cell = row.insertCell();
+                    if (i === 0 && j < firstDayOfWeek || dayCount > lastDay.getDate()) {
+                        cell.textContent = "";
+                    } else {
+                        cell.textContent = dayCount;
+                        if (j === 1 || j === 4) {
+                            cell.className = "red";
+                        }
+                        if (j === 2) {
+                            wednesdayCount++;
+                            if (wednesdayCount === 1 || wednesdayCount === 3) {
+                                cell.className = "pink";
+                            } else {
+                                cell.className = "lightblue";
+                            }
+                        } else if (j === 5) {
+                            saturdayCount++;
+                            if (saturdayCount === 2) {
+                                cell.className = "purple";
+                            }
+                        }
+                        if (date.getFullYear() === today.getFullYear() &&
+                            date.getMonth() === today.getMonth() &&
+                            dayCount === today.getDate()) {
+                            cell.className += " today";
+                        }
+                        dayCount++;
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>
