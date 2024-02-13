@@ -34,10 +34,31 @@
             font-size: 1.5em;
             font-weight: bold;
         }
+        .legend {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .legend div {
+            width: 100px;
+            display: flex;
+            align-items: center;
+        }
+        .legend .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 
 <body>
+    <div class="legend">
+        <div><div class="color-box red"></div>燃えるごみ</div>
+        <div><div class="color-box pink"></div>不燃ごみ</div>
+        <div><div class="color-box lightblue"></div>資源ごみ</div>
+        <div><div class="color-box purple"></div>布・紙ごみ</div>
+    </div>
     <div id="thisMonthDiv"></div>
     <table id="thisMonth"></table>
     <div id="nextMonthDiv"></div>
