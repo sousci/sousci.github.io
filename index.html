@@ -61,11 +61,11 @@
 
     <!-- 1) アセット定義：タイムアウト長め／ArrayBufferで確実に -->
     <a-assets timeout="20000">
-      <a-asset-item id="tigerModel" src="./assets/tiger.glb" response-type="arraybuffer"></a-asset-item>
+      <a-asset-item id="tigerModel" src="./tiger.glb" response-type="arraybuffer"></a-asset-item>
     </a-assets>
 
     <!-- 2) マーカー：イベント発火ON -->
-    <a-marker id="marker" type="pattern" url="./assets/pattern-tora.patt" emitevents="true">
+    <a-marker id="marker" type="pattern" url="./pattern-tora.patt" emitevents="true">
 
       <!-- 2-1) 可視確認用プローブ（赤い箱が出れば .patt 読めている） -->
       <!-- <a-box id="probe" position="0 0.5 0" depth="0.2" height="0.2" width="0.2" color="#E53935" visible="true"></a-box> -->
@@ -216,3 +216,4 @@
   </script>
 </body>
 </html>
+
