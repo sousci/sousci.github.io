@@ -1,1 +1,2 @@
-# sousci.github.io
+# techseeker2025_teamR
+昔ばなしクラッシャー
