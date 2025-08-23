@@ -126,7 +126,7 @@
         const size = new AFRAME.THREE.Vector3(); box.getSize(size);
         console.log('[GLB] size (m):', size.x.toFixed(3), size.y.toFixed(3), size.z.toFixed(3));
 
-        const targetLen = 0.005; // マーカー上に収まりやすい長さ
+        const targetLen = 0.002; // マーカー上に収まりやすい長さ
         const currentLen = Math.max(size.x, size.z);
         if (currentLen > 0) {
           const s = targetLen / currentLen;
@@ -216,4 +216,5 @@
   </script>
 </body>
 </html>
+
 
