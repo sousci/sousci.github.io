@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>授乳タイマー - らくらく予測</title>
+    <style>
+        :root {
+            --primary-color: #ff9a9e;
+            --bg-color: #fff5f5;
+            --text-color: #555;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+        h1 { font-size: 1.2rem; margin-bottom: 20px; }
+
+        /* アナログ時計のデザイン */
+        .clock-container {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 20px;
+        }
+        #analog-clock {
+            width: 100%;
+            height: 100%;
+            border: 8px solid #f0f0f0;
+            border-radius: 50%;
+            position: relative;
+            background: white;
+        }
+        .marker {
+            position: absolute;
+            width: 4px;
+            height: 15px;
+            background: #ddd;
+            left: 50%;
+            transform-origin: 50% 125px;
+        }
+        /* 次回タイミングを示す針（透過） */
+        .next-hand {
+            position: absolute;
+            width: 6px;
+            height: 80px;
+            background: var(--primary-color);
+            left: 50%;
+            top: 45px;
+            transform-origin: 50% 80px;
+            border-radius: 3px;
+            opacity: 0.6;
+        }
+        .current-hand {
+            position: absolute;
+            width: 4px;
+            height: 90px;
+            background: #333;
+            left: 50%;
+            top: 35px;
+            transform-origin: 50% 90px;
+        }
+
+        /* デジタル表示 */
+        .digital-display {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .predictions {
+            text-align: left;
+            background: #fff9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        .prediction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        /* 操作系 */
+        .controls { margin-top: 20px; }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        button:hover { opacity: 0.8; }
+        .settings {
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        input[type="number"] {
+            width: 50px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>授乳予測タイマー</h1>
+
+    <div class="clock-container">
+        <div id="analog-clock">
+            <div id="markers"></div>
+            <div id="prediction-hands"></div>
+            <div class="current-hand" id="hour-hand"></div>
+        </div>
+    </div>
+
+    <div class="digital-display" id="digital-clock">00:00:00</div>
+
+    <div class="predictions">
+        <strong>これからの予測（3回分）</strong>
+        <div id="prediction-list"></div>
+    </div>
+
+    <div class="controls">
+        <button onclick="recordFeeding()">今、授乳した！</button>
+        <div class="settings">
+            間隔：<input type="number" id="interval-input" step="0.5" value="3.0" onchange="updateInterval()"> 時間おき
+        </div>
+    </div>
+</div>
+
+<script>
+    let config = {
+        interval: 3.0,
+        lastFedTime: null
+    };
+
+    // 初期化
+    async function init() {
+        createMarkers();
+        // 1. JSON読み込み（GitHub Pages上のファイルを想定）
+        try {
+            const response = await fetch('settings.json');
+            const data = await response.json();
+            config.interval = data.defaultInterval;
+            document.getElementById('interval-input').value = config.interval;
+        } catch (e) {
+            console.log("JSON load failed, using defaults");
+        }
+
+        // 2. ローカルストレージから前回の記録を読み込み
+        const saved = localStorage.getItem('milk_timer_data');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            config.lastFedTime = new Date(parsed.lastFedTime);
+            config.interval = parsed.interval;
+            document.getElementById('interval-input').value = config.interval;
+        }
+
+        updateUI();
+        setInterval(updateUI, 1000);
+    }
+
+    // 時計の目盛り作成
+    function createMarkers() {
+        const markerContainer = document.getElementById('markers');
+        for (let i = 0; i < 12; i++) {
+            const m = document.createElement('div');
+            m.className = 'marker';
+            m.style.transform = `rotate(${i * 30}deg)`;
+            markerContainer.appendChild(m);
+        }
+    }
+
+    // 授乳記録
+    function recordFeeding() {
+        config.lastFedTime = new Date();
+        saveData();
+        updateUI();
+    }
+
+    function updateInterval() {
+        config.interval = parseFloat(document.getElementById('interval-input').value);
+        saveData();
+        updateUI();
+    }
+
+    function saveData() {
+        localStorage.setItem('milk_timer_data', JSON.stringify({
+            lastFedTime: config.lastFedTime,
+            interval: config.interval
+        }));
+    }
+
+    function updateUI() {
+        const now = new Date();
+        
+        // デジタル時計更新
+        document.getElementById('digital-clock').innerText = now.toLocaleTimeString('ja-JP');
+
+        // アナログ時計の現在時刻（短針のみ簡易表示）
+        const hour = now.getHours() % 12;
+        const min = now.getMinutes();
+        const hourDeg = (hour * 30) + (min * 0.5);
+        document.getElementById('hour-hand').style.transform = `rotate(${hourDeg}deg)`;
+
+        // 予測計算
+        if (config.lastFedTime) {
+            const listContainer = document.getElementById('prediction-list');
+            const handContainer = document.getElementById('prediction-hands');
+            listContainer.innerHTML = '';
+            handContainer.innerHTML = '';
+
+            for (let i = 1; i <= 3; i++) {
+                const nextTime = new Date(config.lastFedTime.getTime() + (config.interval * 60 * 60 * 1000 * i));
+                
+                // リスト表示
+                const item = document.createElement('div');
+                item.className = 'prediction-item';
+                item.innerHTML = `<span>第 ${i} 回目</span> <span>${nextTime.getHours()}:${String(nextTime.getMinutes()).padStart(2, '0')}</span>`;
+                listContainer.appendChild(item);
+
+                // 時計上の針表示（1回目だけ強調、2・3回目は薄く）
+                const nHour = nextTime.getHours() % 12;
+                const nMin = nextTime.getMinutes();
+                const nDeg = (nHour * 30) + (nMin * 0.5);
+                
+                const hand = document.createElement('div');
+                hand.className = 'next-hand';
+                hand.style.transform = `rotate(${nDeg}deg)`;
+                hand.style.opacity = (1.2 - (i * 0.3)); // 後の回ほど薄く
+                handContainer.appendChild(hand);
+            }
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
